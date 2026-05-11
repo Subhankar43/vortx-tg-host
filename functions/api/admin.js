@@ -152,7 +152,6 @@ export async function onRequestPost({ request, env }) {
   if (action === 'deleteFile') {
   const { fileId } = body;
   if (!fileId) return json({ error: 'fileId required.' }, 400);
-  // file: किसी भी user का हो सकता है, list करके ढूंढो
   const allFiles = await env.KV.list({ prefix: 'file:' });
   let deleted = false;
   for (const key of allFiles.keys) {
@@ -163,6 +162,16 @@ export async function onRequestPost({ request, env }) {
     }
   }
   if (!deleted) return json({ error: 'File not found.' }, 404);
+  const today = new Date().toISOString().slice(0, 10);
+  const globalRaw = await env.KV.get('stats:global');
+  const global = globalRaw
+  ? JSON.parse(globalRaw)
+  : { downloads:{}, previews:{}, copies:{}, deletes:{} };
+
+    global.deletes = global.deletes || {};
+    global.deletes[today] = (global.deletes[today] || 0) + 1;
+
+await env.KV.put('stats:global', JSON.stringify(global));
   return json({ ok: true });
 }
   // Delete all sessions of this user

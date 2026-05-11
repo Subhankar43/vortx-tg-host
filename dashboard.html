@@ -7,6 +7,8 @@
 <link rel="shortcut icon" href="Main.png" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+<script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
 <style>
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
@@ -755,8 +757,11 @@ function openPreview(f) {
     body.appendChild(img);
   } else if (mime.startsWith('video/')) {
     const vid = document.createElement('video');
-    vid.src = fileUrl; vid.controls = true;
+    vid.src = fileUrl;
+    vid.controls = true;
+    vid.style.cssText = 'max-width:100%;max-height:68vh;border-radius:8px;width:100%';
     body.appendChild(vid);
+    setTimeout(() => { new Plyr(vid, { controls: ['play-large','play','progress','current-time','mute','volume','fullscreen'] }); }, 50);
   } else if (mime.startsWith('audio/')) {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'text-align:center;width:100%';

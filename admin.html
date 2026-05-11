@@ -7,6 +7,8 @@
 <link rel="shortcut icon" href="Main.png" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+<script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
 <style>
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
@@ -188,6 +190,12 @@
   /* Action buttons */
   .actions { display:flex; gap:5px; flex-wrap:wrap; }
   .btn-xs { padding:.28rem .65rem; border-radius:6px; font-size:.7rem; font-weight:600; cursor:pointer; border:none; font-family:'DM Sans',sans-serif; transition:all .15s; white-space:nowrap; }
+  .btn-preview-file { background:rgba(56,189,248,0.08); color:#38bdf8; border:1px solid rgba(56,189,248,0.15); }
+.btn-preview-file:hover { background:rgba(56,189,248,0.15); }
+.btn-copy-file { background:rgba(124,109,250,0.08); color:#a78bfa; border:1px solid rgba(124,109,250,0.15); }
+.btn-copy-file:hover { background:rgba(124,109,250,0.15); }
+.btn-dl-file { background:rgba(74,222,128,0.08); color:#4ade80; border:1px solid rgba(74,222,128,0.15); text-decoration:none; display:inline-flex; align-items:center; }
+.btn-dl-file:hover { background:rgba(74,222,128,0.15); }
   .btn-approve { background:rgba(52,211,153,0.08); color:var(--green); border:1px solid rgba(52,211,153,0.2); }
   .btn-approve:hover { background:rgba(52,211,153,0.18); }
   .btn-reject { background:rgba(251,191,36,0.08); color:var(--yellow); border:1px solid rgba(251,191,36,0.2); }
@@ -709,8 +717,8 @@ function formatBytes(b) {
   if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
   return (b/(1024*1024)).toFixed(2) + ' MB';
 }
-
 function renderFiles(files) {
+  window._adminFiles = files;
   const q = document.getElementById('fileSearch').value.trim();
   document.getElementById('fileCountBadge').textContent =
     q ? `${files.length} of ${allFiles.length} files` : `${files.length} files`;
@@ -739,6 +747,9 @@ function renderFiles(files) {
           ${f.uploadedAt ? new Date(f.uploadedAt).toLocaleString() : '—'}
         </td>
         <td>
+         <button class="btn-xs btn-preview-file" onclick="adminPreviewFile(window._adminFiles[${files.indexOf(f)}])">👁 Preview</button>
+<button class="btn-xs btn-copy-file" onclick="adminCopyUrl('${f.fileId}', this)">📋 Copy</button>
+          <a class="btn-xs btn-dl-file" href="/file/${f.fileId}?download=1" target="_blank">⬇ Download</a>
           <button class="btn-xs btn-del" onclick="deleteSingleFile('${f.fileId}', this)">🗑 Delete</button>
         </td>
       </tr>
@@ -960,8 +971,98 @@ function escHtml(str) {
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
 }
+let adminCurrentFileId = null;
+
+function adminPreviewFile(f) {
+  adminCurrentFileId = f.fileId;
+  const fileUrl = '/file/' + f.fileId;
+  document.getElementById('adminModalTitle').textContent = f.name || f.fileId;
+  document.getElementById('adminModalDlBtn').href = fileUrl + '?download=1';
+
+  const body = document.getElementById('adminModalBody');
+  body.innerHTML = '';
+  const mime = (f.mimeType || f.type || '').toLowerCase();
+  const name = (f.name || '').toLowerCase();
+
+  if (mime.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|svg)$/.test(name)) {
+    const img = document.createElement('img');
+    img.src = fileUrl;
+    img.style.cssText = 'max-width:100%;max-height:68vh;border-radius:8px;object-fit:contain';
+    body.appendChild(img);
+  } else if (mime.startsWith('video/') || /\.(mp4|webm|mov)$/.test(name)) {
+    const vid = document.createElement('video');
+    vid.src = fileUrl; vid.controls = true;
+    vid.style.cssText = 'max-width:100%;max-height:68vh;border-radius:8px;width:100%';
+    body.appendChild(vid);
+    setTimeout(() => { new Plyr(vid, { controls: ['play-large','play','progress','current-time','mute','volume','fullscreen'] }); }, 50);
+  } else if (mime.startsWith('audio/') || /\.(mp3|wav|ogg|flac)$/.test(name)) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'text-align:center;width:100%';
+    wrap.innerHTML = `<div style="font-size:2.8rem;margin-bottom:0.8rem">🎵</div><p style="color:#888;margin-bottom:0.8rem;font-size:0.82rem">${escHtml(f.name || '')}</p>`;
+    const aud = document.createElement('audio');
+    aud.src = fileUrl; aud.controls = true; aud.style.width = '100%';
+    wrap.appendChild(aud);
+    body.appendChild(wrap);
+    setTimeout(() => { new Plyr(aud); }, 50);
+  } else if (mime === 'application/pdf' || mime.startsWith('text/') || /\.pdf$/.test(name)) {
+    const iframe = document.createElement('iframe');
+    iframe.src = fileUrl;
+    iframe.style.cssText = 'width:100%;height:62vh;border:none;border-radius:8px;background:#fff';
+    body.appendChild(iframe);
+  } else {
+    body.innerHTML = `<div style="text-align:center;color:#6a6a88;padding:2rem"><div style="font-size:2.8rem;margin-bottom:0.8rem">📄</div><p style="margin-bottom:0.5rem">${escHtml(f.name || f.fileId)}</p><p style="font-size:0.8rem;color:#44445a">Preview not available. Download to view.</p></div>`;
+  }
+
+  const overlay = document.getElementById('adminModalOverlay');
+  overlay.style.opacity = '1';
+  overlay.style.pointerEvents = 'all';
+  document.getElementById('adminModal').style.transform = 'scale(1)';
+}
+
+function closeAdminModal() {
+  const overlay = document.getElementById('adminModalOverlay');
+  overlay.style.opacity = '0';
+  overlay.style.pointerEvents = 'none';
+  document.getElementById('adminModal').style.transform = 'scale(0.97)';
+  const vid = document.querySelector('#adminModalBody video');
+  const aud = document.querySelector('#adminModalBody audio');
+  if (vid) vid.pause();
+  if (aud) aud.pause();
+}
+
+function adminCopyUrl(fileId, btn) {
+  const url = window.location.origin + '/file/' + fileId;
+  navigator.clipboard.writeText(url).then(() => {
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }
+  });
+}
+
+function adminCopyCurrentUrl() {
+  if (!adminCurrentFileId) return;
+  navigator.clipboard.writeText(window.location.origin + '/file/' + adminCurrentFileId);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAdminModal(); });
 
 checkAuth();
 </script>
+<!-- Preview Modal -->
+<div class="modal-overlay" id="adminModalOverlay" onclick="if(event.target===this)closeAdminModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem;opacity:0;pointer-events:none;transition:opacity 0.25s;">
+  <div style="background:#0e0e18;border:1px solid rgba(255,255,255,0.1);border-radius:16px;max-width:820px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.6);transform:scale(0.97);transition:transform 0.25s;" id="adminModal">
+    <div style="padding:0.9rem 1.2rem;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
+      <div id="adminModalTitle" style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      <button onclick="closeAdminModal()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);color:#6a6a88;font-size:0.85rem;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+    </div>
+    <div id="adminModalBody" style="padding:1.2rem;overflow:auto;flex:1;display:flex;align-items:center;justify-content:center;min-height:150px;"></div>
+    <div style="padding:0.8rem 1.2rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:0.6rem;justify-content:flex-end;">
+      <button class="btn-xs btn-copy-file" id="adminModalCopyBtn" onclick="adminCopyCurrentUrl()">📋 Copy URL</button>
+      <a class="btn-xs btn-dl-file" id="adminModalDlBtn" href="#" target="_blank">⬇ Download</a>
+    </div>
+  </div>
+</div>
 </body>
 </html>
