@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vortx TG-Host</title>
+<link rel="shortcut icon" href="Main.png" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg: #05050a;
+    --surface: #0e0e18;
+    --border: rgba(255,255,255,0.07);
+    --accent: #7c6dfa;
+    --accent2: #c084fc;
+    --text: #f0f0f5;
+    --muted: #5a5a72;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,109,250,0.12) 0%, transparent 70%);
+    top: -100px;
+    left: -100px;
+    pointer-events: none;
+    animation: pulse 8s ease-in-out infinite;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(192,132,252,0.08) 0%, transparent 70%);
+    bottom: -100px;
+    right: -100px;
+    pointer-events: none;
+    animation: pulse 8s ease-in-out infinite reverse;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+  }
+
+  /* Grid overlay */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo-mark {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0 40px rgba(124,109,250,0.35);
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+    animation: fadeUp 0.8s 0.15s ease both;
+  }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 400;
+    margin-bottom: 2.5rem;
+    max-width: 280px;
+    line-height: 1.6;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(124,109,250,0.1);
+    border: 1px solid rgba(124,109,250,0.25);
+    color: var(--accent2);
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s 0.05s ease both;
+  }
+
+  .btns {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 280px;
+    animation: fadeUp 0.8s 0.25s ease both;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s ease;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 24px rgba(124,109,250,0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(124,109,250,0.45);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+  }
+  .btn-outline:hover {
+    border-color: rgba(124,109,250,0.4);
+    background: rgba(124,109,250,0.05);
+  }
+
+  .features {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .feature span { font-size: 1.2rem; }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="wrap">
+  <div class="pill-badge">⚡ Telegram Powered</div>
+  <div class="logo-mark">⬡</div>
+  <h1>Vortx<br>TG-Host</h1>
+  <p class="tagline">Store & share files seamlessly using Telegram</p>
+  <div class="btns">
+    <a class="btn btn-primary" href="/login.html">Login</a>
+    <a class="btn btn-outline" href="/signup.html">Create Account</a>
+  </div>
+  <div class="features">
+    <div class="feature"><span>🔒</span>Secure</div>
+    <div class="feature"><span>⚡</span>Fast</div>
+    <div class="feature"><span>📦</span>50MB</div>
+    <div class="feature"><span>🔗</span>Shareable</div>
+  </div>
+</div>
+</body>
+</html>

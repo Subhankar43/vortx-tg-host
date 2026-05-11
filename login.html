@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TG-Host - Login</title>
+<link rel="shortcut icon" href="Main.png" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg: #05050a;
+    --surface: #0e0e18;
+    --border: rgba(255,255,255,0.07);
+    --accent: #7c6dfa;
+    --accent2: #c084fc;
+    --text: #f0f0f5;
+    --muted: #5a5a72;
+    --error: #ff5757;
+    --success: #4ade80;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,109,250,0.1) 0%, transparent 70%);
+    top: -150px; left: -150px;
+    pointer-events: none;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+  }
+
+  .card {
+    position: relative;
+    z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 400px;
+    width: 90%;
+    animation: slideUp 0.5s ease both;
+    box-shadow: 0 32px 64px rgba(0,0,0,0.4);
+  }
+
+  @keyframes slideUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  .card-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .icon-wrap {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 30px rgba(124,109,250,0.3);
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.3rem;
+  }
+
+  .subtitle { color: var(--muted); font-size: 0.85rem; }
+
+  .field { margin-bottom: 1.1rem; }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input:focus { border-color: rgba(124,109,250,0.5); background: rgba(124,109,250,0.04); }
+  input::placeholder { color: #333; }
+
+  .btn {
+    width: 100%;
+    padding: 0.85rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(124,109,250,0.25);
+    letter-spacing: 0.01em;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,109,250,0.4); }
+  .btn:active { transform: translateY(0); }
+
+  .msg {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.82rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 8px;
+    display: none;
+  }
+  .msg.error { background: rgba(255,87,87,0.1); border: 1px solid rgba(255,87,87,0.2); color: var(--error); display: block; }
+  .msg.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2); color: var(--success); display: block; }
+
+  .link {
+    text-align: center;
+    margin-top: 1.25rem;
+    font-size: 0.83rem;
+    color: var(--muted);
+  }
+  .link a { color: var(--accent2); text-decoration: none; font-weight: 500; }
+  .link a:hover { text-decoration: underline; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0 1.25rem;
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="card">
+  <div class="card-header">
+    <div class="icon-wrap">🔑</div>
+    <h2>Welcome back</h2>
+    <p class="subtitle">Sign in to your TG-Host account</p>
+  </div>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')login()" />
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()" />
+  </div>
+  <button class="btn" onclick="login()">Login</button>
+  <div class="msg" id="msg"></div>
+  <hr class="divider">
+  <div class="link">Don't have an account? <a href="/signup.html">Sign Up</a></div>
+</div>
+<script>
+async function login() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const msg = document.getElementById('msg');
+  msg.className = 'msg';
+
+  if (!email || !password) {
+    msg.textContent = 'All fields are required.';
+    msg.className = 'msg error';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      msg.textContent = 'Login successful! Redirecting...';
+      msg.className = 'msg success';
+      setTimeout(() => window.location.href = '/dashboard.html', 1000);
+    } else {
+      msg.textContent = data.error || 'Login failed.';
+      msg.className = 'msg error';
+    }
+  } catch(e) {
+    msg.textContent = 'Network error. Try again.';
+    msg.className = 'msg error';
+  }
+}
+</script>
+</body>
+</html>

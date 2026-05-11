@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 - Page Not Found</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #05010f;
+      color: white;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bg-glow {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(139,92,246,0.35), transparent 70%);
+      filter: blur(50px);
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px;
+      width: 90%;
+      max-width: 600px;
+      border: 1px solid rgba(139,92,246,0.25);
+      background: rgba(12, 8, 30, 0.75);
+      border-radius: 24px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 40px rgba(139,92,246,0.15);
+    }
+
+    h1 {
+      font-size: 120px;
+      line-height: 1;
+      font-weight: 900;
+      background: linear-gradient(90deg, #c084fc, #8b5cf6, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 25px rgba(168,85,247,0.25);
+    }
+
+    h2 {
+      margin-top: 10px;
+      font-size: 28px;
+      color: #ffffff;
+    }
+
+    p {
+      margin-top: 14px;
+      color: #a1a1aa;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(90deg, #8b5cf6, #a855f7);
+      box-shadow: 0 0 20px rgba(168,85,247,0.35);
+      transition: 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 0 30px rgba(168,85,247,0.5);
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 80px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+
+  <div class="container">
+    <h1>404</h1>
+    <h2>Page Not Found</h2>
+
+    <p>
+      The page you are looking for does not exist or was removed.
+      Please check the URL or return to the homepage.
+    </p>
+
+    <a href="/" class="btn">Go Back Home</a>
+  </div>
+
+</body>
+</html>
+

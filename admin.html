@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TG-Host Admin</title>
+<link rel="shortcut icon" href="Main.png" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg: #040408;
+    --surface: #0a0a12;
+    --surface2: #0f0f1c;
+    --surface3: #141425;
+    --border: rgba(255,255,255,0.05);
+    --border2: rgba(255,255,255,0.09);
+    --accent: #f59e0b;
+    --accent2: #fcd34d;
+    --accent-glow: rgba(245,158,11,0.15);
+    --text: #eeeef5;
+    --muted: #44445a;
+    --muted2: #66667a;
+    --green: #34d399;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --yellow: #fbbf24;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ─── LOGIN ─── */
+  .login-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-wrap::before {
+    content: '';
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%);
+    top: -200px; right: -200px;
+    pointer-events: none;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .login-card {
+    position: relative; z-index: 10;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.04);
+    animation: slideUp 0.5s ease both;
+  }
+
+  @keyframes slideUp {
+    from { opacity:0; transform:translateY(20px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  .login-header { text-align: center; margin-bottom: 2rem; }
+
+  .admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.3rem 0.8rem;
+    border-radius: 99px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .login-card h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.3rem;
+  }
+
+  .login-sub { color: var(--muted2); font-size: 0.83rem; }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--muted2);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  input[type=password] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input[type=password]:focus { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.03); }
+  input[type=password]::placeholder { color: #2a2a3a; }
+
+  .btn-admin-login {
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(245,158,11,0.25);
+  }
+  .btn-admin-login:hover { background: var(--accent2); box-shadow: 0 6px 28px rgba(245,158,11,0.4); transform: translateY(-1px); }
+
+  .msg { text-align: center; margin-top: 0.8rem; font-size: 0.82rem; color: var(--red); min-height: 1.2rem; }
+
+  /* ─── PANEL ─── */
+  #adminPanel { display: none; }
+
+  /* ─── TOP NAV ─── */
+  .admin-nav {
+    background: rgba(10,10,18,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .nav-brand-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #000;
+    font-weight: 800;
+  }
+
+  .admin-nav h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .nav-pill {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.15);
+    color: var(--accent);
+    font-size: 0.65rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 99px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .btn-logout {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted2);
+    padding: 0.35rem 0.9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); background: rgba(248,113,113,0.05); }
+
+  /* ─── CONTAINER ─── */
+  .container { max-width: 1160px; margin: 0 auto; padding: 1.75rem 1.5rem; }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .page-header-left h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .page-header-left p { color: var(--muted2); font-size: 0.8rem; margin-top: 0.2rem; }
+
+  .refresh-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted2);
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .refresh-btn:hover { border-color: rgba(245,158,11,0.4); color: var(--accent); }
+
+  /* ─── STATS GRID ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.75rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem 1.2rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .stat-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0.4;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 500;
+    margin-bottom: 0.6rem;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-sub { font-size: 0.7rem; color: var(--muted); }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 0.45rem 1.1rem;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--muted2);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+  }
+
+  /* ─── TABLE ─── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .table-header-title {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--muted2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .table-wrap { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    text-align: left;
+    padding: 0.65rem 1.2rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.01);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  td {
+    padding: 0.8rem 1.2rem;
+    vertical-align: middle;
+    font-size: 0.83rem;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 99px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+  .badge-pending { background: rgba(251,191,36,0.08); color: var(--yellow); border: 1px solid rgba(251,191,36,0.2); }
+  .badge-pending::before { background: var(--yellow); }
+  .badge-approved { background: rgba(52,211,153,0.08); color: var(--green); border: 1px solid rgba(52,211,153,0.15); }
+  .badge-approved::before { background: var(--green); }
+  .badge-rejected { background: rgba(248,113,113,0.08); color: var(--red); border: 1px solid rgba(248,113,113,0.15); }
+  .badge-rejected::before { background: var(--red); }
+
+  /* Action buttons */
+  .actions { display: flex; gap: 5px; flex-wrap: wrap; }
+
+  .btn-xs {
+    padding: 0.28rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-approve { background: rgba(52,211,153,0.08); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+  .btn-approve:hover { background: rgba(52,211,153,0.18); }
+
+  .btn-reject { background: rgba(251,191,36,0.08); color: var(--yellow); border: 1px solid rgba(251,191,36,0.2); }
+  .btn-reject:hover { background: rgba(251,191,36,0.15); }
+
+  .btn-del { background: rgba(248,113,113,0.07); color: var(--red); border: 1px solid rgba(248,113,113,0.15); }
+  .btn-del:hover { background: rgba(248,113,113,0.15); }
+
+  .empty-row td {
+    text-align: center;
+    color: var(--muted);
+    padding: 2.5rem;
+    font-size: 0.83rem;
+  }
+
+  /* ─── ACTIVITY CARDS ─── */
+  .activity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .activity-day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+  }
+
+  .activity-day {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted2);
+    margin-bottom: 0.6rem;
+  }
+
+  .activity-stats { display: flex; flex-direction: column; gap: 3px; }
+  .activity-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+  }
+  .activity-stat .label { color: var(--muted); }
+  .activity-stat .val { font-weight: 600; color: var(--text); }
+
+  /* File ID mono */
+  .mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted2);
+  }
+
+  /* Divider */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1rem;
+  }
+  .section-divider-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- ─── LOGIN SCREEN ─── -->
+<div class="login-wrap" id="loginWrap" style="display:none">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="admin-badge">⚙ Admin Panel</div>
+      <h2>Restricted Access</h2>
+      <p class="login-sub">Enter your admin password to continue</p>
+    </div>
+    <label>Admin Password</label>
+    <input type="password" id="adminPass" placeholder="••••••••••••" onkeydown="if(event.key==='Enter')adminLogin()" />
+    <button class="btn-admin-login" onclick="adminLogin()">Authenticate</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ─── ADMIN PANEL ─── -->
+<div id="adminPanel">
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <div class="nav-brand-icon">A</div>
+      <h1>TG-Host Admin</h1>
+      <span class="nav-pill">Control Panel</span>
+    </div>
+    <button class="btn-logout" onclick="adminLogout()">Sign Out</button>
+  </nav>
+
+  <div class="container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <h2>Overview</h2>
+        <p>System statistics and user management</p>
+      </div>
+      <button class="refresh-btn" onclick="loadStats();loadUsers();">↻ Refresh All</button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value" id="statTotalUsers">—</div>
+        <div class="stat-sub">registered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="statPending">—</div>
+        <div class="stat-sub">awaiting approval</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Files</div>
+        <div class="stat-value" id="statTotalFiles">—</div>
+        <div class="stat-sub">uploaded</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Deleted</div>
+        <div class="stat-value" id="statDeletes">—</div>
+        <div class="stat-sub">files removed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Storage</div>
+        <div class="stat-value" id="statStorage">—</div>
+        <div class="stat-sub">of 50MB limit</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Downloads</div>
+        <div class="stat-value" id="statDownloads">—</div>
+        <div class="stat-sub">today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Previews</div>
+        <div class="stat-value" id="statPreviews">—</div>
+        <div class="stat-sub">today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Links Copied</div>
+        <div class="stat-value" id="statCopies">—</div>
+        <div class="stat-sub">today</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('users', this)">👥 Users</button>
+      <button class="tab" onclick="showTab('activity', this)">📊 Activity</button>
+    </div>
+
+    <!-- ─── USERS TAB ─── -->
+    <div id="tab-users">
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-header-title">All Users</span>
+          <button class="refresh-btn" onclick="loadUsers()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Registered</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr class="empty-row"><td colspan="4">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ACTIVITY TAB ─── -->
+    <div id="tab-activity" style="display:none">
+
+      <div class="section-divider">
+        <span class="section-divider-label">Last 7 Days</span>
+        <div class="section-divider-line"></div>
+        <button class="refresh-btn" onclick="loadStats()">↻ Refresh</button>
+      </div>
+
+      <div class="activity-grid" id="activityCards"></div>
+
+      <div class="section-divider">
+        <span class="section-divider-label">Top Active Files</span>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>File ID</th>
+                <th>Downloads</th>
+                <th>Previews</th>
+                <th>URL Copies</th>
+                <th>Last Activity</th>
+              </tr>
+            </thead>
+            <tbody id="fileStatsBody">
+              <tr class="empty-row"><td colspan="5">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+async function adminLogin() {
+  const password = document.getElementById('adminPass').value;
+  const msg = document.getElementById('loginMsg');
+  if (!password) { msg.textContent = 'Enter password.'; return; }
+  try {
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', password })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showPanel();
+    } else {
+      msg.textContent = data.error || 'Login failed.';
+    }
+  } catch(e) {
+    msg.textContent = 'Network error.';
+  }
+}
+
+async function adminLogout() {
+  await fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'logout' })
+  });
+  location.reload();
+}
+
+function showPanel() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'block';
+  loadUsers();
+  loadStats();
+}
+
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/admin?action=users');
+    if (res.ok) {
+      showPanel();
+    } else {
+      document.getElementById('loginWrap').style.display = 'flex';
+    }
+  } catch(_) {
+    document.getElementById('loginWrap').style.display = 'flex';
+  }
+}
+
+function showTab(name, btn) {
+  document.getElementById('tab-users').style.display = name === 'users' ? 'block' : 'none';
+  document.getElementById('tab-activity').style.display = name === 'activity' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function loadUsers() {
+  const res = await fetch('/api/admin?action=users');
+  if (!res.ok) return;
+  const data = await res.json();
+  const users = data.users || [];
+
+  document.getElementById('statTotalUsers').textContent = users.length;
+  document.getElementById('statPending').textContent = users.filter(u => u.status === 'pending').length;
+
+  const tbody = document.getElementById('usersBody');
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No users yet.</td></tr>';
+    return;
+  }
+
+  users.sort((a,b) => b.createdAt - a.createdAt);
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td>${u.email}</td>
+      <td><span class="badge badge-${u.status || 'approved'}">${u.status || 'approved'}</span></td>
+      <td style="color:var(--muted2);font-size:0.78rem">${new Date(u.createdAt).toLocaleString()}</td>
+      <td>
+        <div class="actions">
+          ${u.status !== 'approved' ? `<button class="btn-xs btn-approve" onclick="userAction('approve','${u.userId}', this)">✓ Approve</button>` : ''}
+          ${u.status !== 'rejected' ? `<button class="btn-xs btn-reject" onclick="userAction('reject','${u.userId}', this)">✕ Reject</button>` : ''}
+          <button class="btn-xs btn-del" onclick="userAction('delete','${u.userId}', this)">🗑 Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function userAction(action, userId, btn) {
+  if (action === 'delete' && !confirm('Delete this user and all their files?')) return;
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, userId })
+    });
+    if (res.ok) loadUsers();
+    else { btn.disabled = false; btn.textContent = '!Err'; }
+  } catch(e) { btn.disabled = false; }
+}
+
+async function loadStats() {
+  const today = new Date().toISOString().slice(0, 10);
+  const res = await fetch('/api/admin?action=stats&_=' + Date.now());
+  if (!res.ok) return;
+  const data = await res.json();
+  const stats = data.stats || { downloads: {}, previews: {}, copies: {} };
+
+  document.getElementById('statDownloads').textContent = stats.downloads[today] || 0;
+  document.getElementById('statPreviews').textContent = stats.previews[today] || 0;
+  document.getElementById('statCopies').textContent = stats.copies[today] || 0;
+  const totalDeletes = Object.values(stats.deletes || {}).reduce((a, b) => a + b, 0);
+  document.getElementById('statDeletes').textContent = totalDeletes;
+
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  const actCards = document.getElementById('activityCards');
+  actCards.innerHTML = days.map(day => `
+    <div class="activity-day-card">
+      <div class="activity-day">${day}</div>
+      <div class="activity-stats">
+        <div class="activity-stat"><span class="label">⬇ Downloads</span><span class="val">${stats.downloads[day] || 0}</span></div>
+        <div class="activity-stat"><span class="label">👁 Previews</span><span class="val">${stats.previews[day] || 0}</span></div>
+        <div class="activity-stat"><span class="label">📋 Copies</span><span class="val">${stats.copies[day] || 0}</span></div>
+      </div>
+    </div>
+  `).join('');
+
+  const fsRes = await fetch('/api/admin?action=filestats&_=' + Date.now());
+  if (!fsRes.ok) return;
+  const fsData = await fsRes.json();
+  const filestats = fsData.filestats || [];
+  filestats.sort((a,b) => ((b.downloads||0)+(b.previews||0)+(b.copies||0)) - ((a.downloads||0)+(a.previews||0)+(a.copies||0)));
+
+  const fBody = document.getElementById('fileStatsBody');
+  if (filestats.length === 0) {
+    fBody.innerHTML = '<tr class="empty-row"><td colspan="5">No activity tracked yet.</td></tr>';
+    return;
+  }
+
+  fBody.innerHTML = filestats.slice(0, 20).map(f => `
+    <tr>
+      <td class="mono">${f.fileId}</td>
+      <td>${f.downloads || 0}</td>
+      <td>${f.previews || 0}</td>
+      <td>${f.copies || 0}</td>
+      <td style="color:var(--muted2);font-size:0.78rem">${f.lastActivity ? new Date(f.lastActivity).toLocaleString() : '—'}</td>
+    </tr>
+  `).join('');
+
+  const r = await fetch('/api/admin?action=uploadedfiles&_=' + Date.now());
+  const d = await r.json();
+  document.getElementById('statTotalFiles').textContent = d.totalFiles || 0;
+  document.getElementById('statStorage').textContent = ((d.totalBytes||0)/(1024*1024)).toFixed(1) + ' MB';
+}
+
+checkAuth();
+</script>
+</body>
+</html>
