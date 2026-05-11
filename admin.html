@@ -807,10 +807,24 @@ async function loadStats() {
     </tr>
   `).join('');
 
+  try {
+  console.log('before uploadedfiles');
+
   const r = await fetch('/api/admin?action=uploadedfiles&_=' + Date.now());
+
   const d = await r.json();
-  document.getElementById('statTotalFiles').textContent = d.totalFiles || 0;
-  document.getElementById('statStorage').textContent = ((d.totalBytes||0)/(1024*1024)).toFixed(1) + ' MB';
+
+  console.log('uploadedfiles response:', d);
+
+  document.getElementById('statTotalFiles').textContent =
+    d.totalFiles || 0;
+
+  document.getElementById('statStorage').textContent =
+    ((d.totalBytes || 0) / (1024 * 1024)).toFixed(1) + ' MB';
+
+} catch (e) {
+  console.error('uploadedfiles error:', e);
+}
 }
 
 checkAuth();

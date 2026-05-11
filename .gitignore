@@ -2,3 +2,5 @@ SETUP.md
 wrangler.toml
 .dev.vars
 .wrangler
+functions/api/admin2.js
+admin2.html
