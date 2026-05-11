@@ -430,7 +430,7 @@
   <div class="nav-logo" style="position:absolute; left:50%; transform:translateX(-50%);">
   <h1 style="margin:0; font-size:32px; font-weight:800; letter-spacing:1.5px; background:linear-gradient(90deg,#c084fc,#8b5cf6,#7c3aed); -webkit-background-clip:text;
     -webkit-text-fill-color:transparent; text-shadow:0 0 18px rgba(168,85,247,0.35); font-family:'Segoe UI',sans-serif;">
-  Vortx
+    Vortx
   </h1>
 </div>
   <div class="nav-right">
@@ -699,32 +699,92 @@ async function uploadFiles(input) {
   const files = Array.from(input.files);
   if (!files.length) return;
 
+  const list = document.getElementById('fileList');
+  const status = document.getElementById('uploadStatus');
+
   for (const file of files) {
+
+    // Size check
     if (file.size > 50 * 1024 * 1024) {
       showToast(`${file.name} — 50MB se bada, skip.`);
       continue;
     }
-    const status = document.getElementById('uploadStatus');
+
     status.textContent = `Uploading ${file.name}...`;
 
+    // ===== INSTANT UI ADD =====
+    const tempFile = {
+      fileId: 'temp_' + Date.now() + Math.random(),
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+      uploadedAt: Date.now()
+    };
+
+    // Remove empty state
+    const empty = list.querySelector('.empty');
+    if (empty) empty.remove();
+
+    // Add instantly on top
+    const tempElement = makeFileItem(tempFile);
+    tempElement.style.opacity = '0.6';
+    tempElement.style.border = '1px solid #7c6dfa';
+
+    list.prepend(tempElement);
+
+    // ===== ACTUAL UPLOAD =====
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
       const data = await res.json();
-      if (!res.ok) showToast(`❌ ${file.name}: ${data.error}`);
-    } catch(e) {
+
+      if (!res.ok) {
+
+        tempElement.remove();
+        showToast(`❌ ${file.name}: ${data.error}`);
+        continue;
+      }
+
+      // ===== FINAL REAL FILE =====
+      const realFile = {
+        fileId: data.fileId,
+        fileName: data.fileName,
+        fileSize: data.fileSize,
+        mimeType: data.mimeType,
+        uploadedAt: Date.now()
+      };
+
+      // Replace temp item
+      const realElement = makeFileItem(realFile);
+      tempElement.replaceWith(realElement);
+
+      showToast(`✅ ${file.name} uploaded`);
+
+    } catch (e) {
+
+      tempElement.remove();
       showToast(`❌ ${file.name}: Network error`);
+
     }
+
   }
 
-  document.getElementById('uploadStatus').textContent = '✅ Done!';
-  setTimeout(() => { document.getElementById('uploadStatus').textContent = ''; }, 2000);
-  loadFiles();
+  status.textContent = '✅ Done!';
+
+  setTimeout(() => {
+    status.textContent = '';
+  }, 2000);
+
   input.value = '';
 }
-
+ 
 function setupDragDrop() {
   const zone = document.getElementById('dropZone');
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
