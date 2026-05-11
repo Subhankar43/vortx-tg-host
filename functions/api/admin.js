@@ -56,30 +56,50 @@ export async function onRequestGet({ request, env }) {
     return json({ stats });
   }
 
-  if (action === 'filestats') {
-    // Per-user file stats
-    const list = await env.KV.list({ prefix: 'filestats:' });
-    const allStats = [];
-    for (const key of list.keys) {
-      const raw = await env.KV.get(key.name);
-      if (raw) allStats.push({ key: key.name, ...JSON.parse(raw) });
+if (action === 'filestats') {
+  const list = await env.KV.list({ prefix: 'filestats:' });
+  const allStats = [];
+  for (const key of list.keys) {
+    const raw = await env.KV.get(key.name);
+    if (raw) {
+      const stat = JSON.parse(raw);
+      // key format: filestats:{userId}:{fileId}
+    const uid = stat.userId || key.name.split(':')[1];
+    const emailRaw = await env.KV.get(`userId:${uid}`);
+      allStats.push({
+        ...stat,
+        key: key.name,
+        userEmail: emailRaw || uid
+      });
     }
-    return json({ filestats: allStats });
   }
-  if (action === 'uploadedfiles') {
-    const allFiles = await env.KV.list({ prefix: 'file:' });
-    let totalFiles = 0;
-    let totalBytes = 0;
-    for (const key of allFiles.keys) {
-      const raw = await env.KV.get(key.name);
-      if (raw) {
-        totalFiles++;
-        const f = JSON.parse(raw);
-        totalBytes += f.fileSize || 0;
-      }
+  return json({ filestats: allStats });
+}
+if (action === 'uploadedfiles') {
+  const allFiles = await env.KV.list({ prefix: 'file:' });
+  let totalFiles = 0;
+  let totalBytes = 0;
+  const files = [];
+  for (const key of allFiles.keys) {
+    const raw = await env.KV.get(key.name);
+    if (raw) {
+      totalFiles++;
+      const f = JSON.parse(raw);
+      totalBytes += f.fileSize || 0;
+      // userId से email निकालो
+      const emailRaw = await env.KV.get(`userId:${f.userId}`);
+      files.push({
+        fileId: f.fileId,
+        name: f.fileName,
+        size: f.fileSize,
+        uploadedAt: f.uploadedAt,
+        userId: f.userId,
+        userEmail: emailRaw || f.userId
+      });
     }
-    return json({ totalFiles, totalBytes });
   }
+  return json({ totalFiles, totalBytes, files });
+}
   return json({ error: 'Unknown action.' }, 400);
 }
 
@@ -129,6 +149,22 @@ export async function onRequestPost({ request, env }) {
     }
     return json({ ok: true });
   }
+  if (action === 'deleteFile') {
+  const { fileId } = body;
+  if (!fileId) return json({ error: 'fileId required.' }, 400);
+  // file: किसी भी user का हो सकता है, list करके ढूंढो
+  const allFiles = await env.KV.list({ prefix: 'file:' });
+  let deleted = false;
+  for (const key of allFiles.keys) {
+    if (key.name.includes(`:${fileId}`)) {
+      await env.KV.delete(key.name);
+      deleted = true;
+      break;
+    }
+  }
+  if (!deleted) return json({ error: 'File not found.' }, 404);
+  return json({ ok: true });
+}
   // Delete all sessions of this user
 const sessionList = await env.KV.list({ prefix: 'session:' });
 for (const key of sessionList.keys) {
