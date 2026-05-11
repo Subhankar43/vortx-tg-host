@@ -4,3 +4,4 @@ wrangler.toml
 .wrangler
 functions/api/admin2.js
 admin2.html
+functions/test.js
